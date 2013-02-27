@@ -27,7 +27,6 @@ module Go
 
     def each(&blk)
       while true do
-        puts "Closed? #{@closed}"
         break if @closed
         x = shift
         break if x == Go::Exit
@@ -37,7 +36,6 @@ module Go
 
     # close the channel
     def close
-      puts 'closing channel'
       @closed = true
       self << Go::Exit
     end
