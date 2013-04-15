@@ -1,8 +1,11 @@
 module Go
   class Channel
-    attr_reader :closed
+    attr_reader :closed, :msg_counter
+    attr_accessor :options
 
-    def initialize
+    def initialize(options={})
+      @options = options
+      @msg_counter = 0
       @queue = Queue.new
     end
 
@@ -12,12 +15,14 @@ module Go
 
     def shift
       begin
+        @msg_counter += 1
+        if @options[:close_after] && @msg_counter >= @options[:close_after]
+          close()
+        end
         @queue.shift
       rescue Exception => ex
-        puts ex.class.name
-        p ex
-        puts ex.message
-        if ex.class.name == "fatal" && ex.message.include?("deadlock")
+        Go.logger.debug "#{ex.class.name}: #{ex.message}"
+        if (ex.message.include?("deadlock") || ex.message.include?("Deadlock")) # ruby 2.0 uses Deadlock, capitalized
           close()
           return Go::Exit
         end

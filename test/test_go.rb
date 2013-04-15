@@ -8,6 +8,7 @@ class TestGo < Test::Unit::TestCase
 
     Go.config.max_threads = 10
 
+
     3.times do |i|
       go do
         puts "#{i} sleeping..."
@@ -82,6 +83,49 @@ class TestGo < Test::Unit::TestCase
     assert_equal times, i
     assert_equal times / errmod, errs
     puts 'donezo'
+
+
+    # Convenience trick with channels
+    ch = Go::Channel.new
+    times = 10
+    errmod = 5
+    times.times do |i|
+      go(ch) do
+        puts "raise? #{i % errmod == 0}"
+        raise "Error yo!" if i % errmod == 0
+        s = "hello channel #{i}"
+        sleep 1
+        s # don't put the return keyword, it doesn't work with threads for some reason, you'll get "unexpected return"
+      end
+    end
+    go do
+      # wait for a bit, then close channel
+      sleep 10
+      ch.close
+    end
+    puts "waiting on channel..."
+    i = 0
+    errs = 0
+    ch.each do |x|
+      puts "Got #{x} from channel"
+      i += 1
+      case x
+        when String
+          puts "Is String"
+        when Exception
+          puts "Is Exception!"
+          errs += 1
+        when nil
+          puts "got nil, breaking"
+          break
+        else
+          puts "Is something else"
+      end
+    end
+    assert_equal times, i
+    assert_equal times / errmod, errs
+    puts 'donezo'
+
 
   end
 

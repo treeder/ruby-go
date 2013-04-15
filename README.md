@@ -92,3 +92,11 @@ You can close the channel with the close() method which will stop all the listen
 ch.close()
 ```
 
+#### Automatically closing the channel after x messages
+
+When making the channel, pass in :close_after parameter:
+
+```ruby
+ch = Go::Channel.new(:close_after=>100)
+```
+
